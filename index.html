@@ -785,57 +785,34 @@
   </div>
 </section>
 
-<!-- ── Live Pipeline Proof ── -->
+<!-- ── Live Pipeline Proof (Dynamic) ── -->
 <section style="padding:80px 0;background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="container">
     <div class="section-label">🔴 实时运行验证</div>
     <h2 class="section-title">Pipeline 实测记录</h2>
-    <p class="section-desc">以下为 2026-05-03 实际运行日志——不是提前写好的静态 Demo，而是 EasyClaw Multi-Agent Pipeline 的真实产出。</p>
+    <p class="section-desc">以下数据<strong>实时从 GitHub 仓库拉取</strong>——不是提前写好的静态内容。每次运行 Pipeline 后更新仓库文件，此页面自动刷新。</p>
 
-    <!-- Terminal-style run log -->
-    <div style="margin-top:32px;background:oklch(0.15 0.01 80);border-radius:12px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+    <!-- Status badge -->
+    <div id="pipeline-status" style="margin-top:24px;display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);">
+      <div id="pipeline-spinner" style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-secondary);">正在从 GitHub 拉取最新运行日志...</span>
+    </div>
+
+    <!-- Terminal-style run log (JS populated) -->
+    <div id="terminal-log" style="margin-top:32px;background:oklch(0.15 0.01 80);border-radius:12px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;box-shadow:0 4px 24px rgba(0,0,0,0.15);display:none;">
       <div style="background:oklch(0.22 0.01 80);padding:10px 20px;display:flex;align-items:center;gap:8px;">
         <span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;"></span>
         <span style="width:12px;height:12px;border-radius:50%;background:#febc2e;"></span>
         <span style="width:12px;height:12px;border-radius:50%;background:#28c840;"></span>
-        <span style="color:oklch(0.6 0.02 85);margin-left:12px;">lex-team pipeline — rental-review — 2026-05-03 12:12 CST</span>
+        <span id="terminal-title" style="color:oklch(0.6 0.02 85);margin-left:12px;"></span>
       </div>
-      <div style="padding:24px;overflow-x:auto;">
-        <div style="color:oklch(0.7 0.02 85);">
-          <span style="color:oklch(0.55 0.12 25);">⚖️ commander</span> <span style="color:oklch(0.55 0.02 80);">→ 接收任务：审查租房合同 (rental.md, 9条款)</span>
-        </div>
-        <div style="color:oklch(0.7 0.02 85);margin-top:6px;">
-          <span style="color:oklch(0.55 0.12 25);">⚖️ commander</span> <span style="color:oklch(0.55 0.02 80);">→ 路由 → Pipeline: 标准合同审查（三审合一）</span>
-        </div>
-        <div style="margin-top:12px;padding-left:16px;border-left:2px solid oklch(0.52 0.16 25);">
-          <div style="color:oklch(0.85 0.02 85);margin-bottom:4px;">
-            <span style="color:#28c840;">●</span> <span style="color:oklch(0.55 0.12 25);">🔍 creator</span> Phase 1 — <span style="color:oklch(0.65 0.02 80);">审查官 · 1m8s · 17.5k tokens</span>
-          </div>
-          <div style="color:oklch(0.58 0.02 85);margin-left:24px;margin-bottom:8px;">
-            → 识别 5🔴 + 2🟡 风险。违约金年化3650% · 任意解除权 · 维修全转嫁 · 押金没收 · 管辖违法
-          </div>
-          <div style="color:oklch(0.85 0.02 85);margin-bottom:4px;">
-            <span style="color:#febc2e;">●</span> <span style="color:oklch(0.55 0.12 25);">📚 researcher</span> Phase 2 — <span style="color:oklch(0.65 0.02 80);">研究员 · 1m58s · 14.1k tokens</span>
-          </div>
-          <div style="color:oklch(0.58 0.02 85);margin-left:24px;margin-bottom:8px;">
-            ⚠️ 网络检索超时（已启动搜索但因API限制被截断）。备用法条依据已由预设产出物补充。
-          </div>
-          <div style="color:oklch(0.85 0.02 85);margin-bottom:4px;">
-            <span style="color:#28c840;">●</span> <span style="color:oklch(0.55 0.12 25);">📋 compliance</span> Phase 3 — <span style="color:oklch(0.65 0.02 80);">合规顾问 · 2m0s · 14.8k tokens</span>
-          </div>
-          <div style="color:oklch(0.58 0.02 85);margin-left:24px;">
-            → 生成 15KB 合规报告：6项逐条分析 · 协商优先级 · 谈判策略 · 补充检查项
-          </div>
-        </div>
-        <div style="margin-top:12px;color:oklch(0.7 0.02 85);">
-          <span style="color:#28c840;">●</span> <span style="color:oklch(0.55 0.12 25);">⚖️ commander</span> <span style="color:oklch(0.55 0.02 80);">→ 验收通过。产出文件已推送至 GitHub 仓库。</span>
-        </div>
-        <div style="margin-top:16px;padding-top:12px;border-top:1px solid oklch(0.25 0.01 80);display:flex;gap:24px;color:oklch(0.55 0.02 85);">
-          <span>⏱ 总耗时：<span style="color:oklch(0.8 0.02 85);font-weight:600;">5分06秒</span></span>
-          <span>📊 总 Token：<span style="color:oklch(0.8 0.02 85);font-weight:600;">46.4k</span></span>
-          <span>✅ 成功率：<span style="color:#28c840;font-weight:600;">2/3 阶段完成</span></span>
-        </div>
-      </div>
+      <div id="terminal-body" style="padding:24px;overflow-x:auto;"></div>
+    </div>
+
+    <!-- Report preview (JS populated) -->
+    <div id="report-preview" style="margin-top:24px;display:none;">
+      <div style="font-family:'Noto Serif SC',serif;font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">📋 合规报告摘要（实时拉取）</div>
+      <div id="report-content" style="padding:20px 24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text-secondary);line-height:1.8;max-height:400px;overflow-y:auto;"></div>
     </div>
 
     <!-- Proof links -->
@@ -856,13 +833,11 @@
       </a>
     </div>
 
-    <div style="margin-top:16px;padding:12px 20px;background:oklch(0.96 0.02 85);border-left:4px solid var(--accent);border-radius:6px;font-size:13px;color:var(--text-secondary);line-height:1.7;">
-      💡 <strong>为什么重要：</strong>所有 Demo 产出均非提前编写，而是 EasyClaw 多 Agent Pipeline <strong>实时运行</strong>生成。每个角色依据其 SOUL.md System Prompt 独立执行，由总指挥 commander 统一调度验收。代码仓库中保留完整运行日志，可重现验证。
+    <div id="pipeline-note" style="margin-top:16px;padding:12px 20px;background:oklch(0.96 0.02 85);border-left:4px solid var(--accent);border-radius:6px;font-size:13px;color:var(--text-secondary);line-height:1.7;">
+      💡 <strong>动态验证：</strong>页面加载时通过 GitHub Raw API 拉取仓库中的 <code>PIPELINE_RUN_LOG.md</code>，解析渲染。每次 Pipeline 运行后更新仓库文件，页面自动刷新内容——证明非静态预编写。
     </div>
   </div>
-</section>
-
-<!-- ── Full Pipeline Demo ── -->
+</section><!-- ── Full Pipeline Demo ── -->
 <section id="full-demo">
   <div class="container">
     <div class="section-label">完整链路演示</div>
