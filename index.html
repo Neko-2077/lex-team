@@ -1289,6 +1289,112 @@ function switchDemo(idx) {
     t.style.fontWeight = i === idx ? '600' : '400';
   });
 }
+
+// ── Dynamic Pipeline Proof: fetch from GitHub repo ──
+async function fetchPipelineData() {
+  const status = document.getElementById('pipeline-status');
+  const spinner = document.getElementById('pipeline-spinner');
+  const terminal = document.getElementById('terminal-log');
+  const reportPreview = document.getElementById('report-preview');
+  
+  try {
+    // Fetch run log
+    const logResp = await fetch('https://raw.githubusercontent.com/Neko-2077/lex-team/main/demo-outputs/PIPELINE_RUN_LOG.md');
+    const logText = await logResp.text();
+    
+    if (!logResp.ok || !logText.trim()) throw new Error('Log not found');
+    
+    // Parse run log (simple text-based)
+    const lines = logText.split('\n');
+    const runTime = (lines.find(l => l.includes('运行时间')) || '').replace(/\*\*/g,'').replace('**','');
+    const pipelineType = (lines.find(l => l.includes('Pipeline 类型')) || '').replace(/\*\*/g,'');
+    
+    // Build terminal output
+    const termBody = document.getElementById('terminal-body');
+    const termTitle = document.getElementById('terminal-title');
+    termTitle.textContent = 'lex-team pipeline — ' + (pipelineType.match(/：(.+)/)?.[1] || 'rental-review') + ' — ' + (runTime.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/)?.[0] || '');
+    
+    // Parse table rows
+    let html = '';
+    let totalTime = '', totalTokens = '', okCount = 0, totalCount = 0;
+    let inTable = false;
+    for (const line of lines) {
+      if (line.includes('| 阶段 |')) { inTable = true; continue; }
+      if (inTable) {
+        if (line.startsWith('|') && line.includes('|') && !line.includes('---')) {
+          const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+          if (cols.length >= 4) {
+            const phase = cols[0];
+            const role = cols[1];
+            const statusText = cols[3];
+            const output = cols[4] || '';
+            const isOk = statusText.includes('✅');
+            const isWarn = statusText.includes('⚠️');
+            const dot = isOk ? '<span style="color:#28c840;">●</span>' : (isWarn ? '<span style="color:#febc2e;">●</span>' : '<span style="color:#ff5f57;">●</span>');
+            const roleColor = isOk ? 'oklch(0.55 0.12 25)' : 'oklch(0.55 0.08 40)';
+            
+            // Extract time and tokens
+            const timeMatch = statusText.match(/(\d+m\d+s)/);
+            const tokenMatch = statusText.match(/([\d.]+k)\s*tokens/);
+            const timeStr = timeMatch ? timeMatch[1] : '';
+            const tokenStr = tokenMatch ? tokenMatch[1] : '';
+            
+            totalCount++;
+            if (isOk) okCount++;
+            
+            html += '<div style="color:oklch(0.85 0.02 85);margin-bottom:4px;">';
+            html += dot + ' <span style="color:' + roleColor + ';">' + role + '</span> ' + phase + ' — <span style="color:oklch(0.65 0.02 80);">' + statusText + '</span>';
+            html += '</div>';
+            html += '<div style="color:oklch(0.58 0.02 85);margin-left:24px;margin-bottom:8px;">→ ' + output + '</div>';
+          }
+        } else if (line.trim() === '' && html) {
+          break;
+        }
+      }
+    }
+    
+    // Parse totals
+    const totalLine = lines.find(l => l.includes('总耗时'));
+    if (totalLine) {
+      const tMatch = totalLine.match(/约\s*(.+)/);
+      if (tMatch) totalTime = tMatch[1];
+    }
+    
+    termBody.innerHTML = html + 
+      '<div style="margin-top:12px;padding-top:12px;border-top:1px solid oklch(0.25 0.01 80);display:flex;gap:24px;color:oklch(0.55 0.02 85);">' +
+      '<span>⏱ 总耗时：<span style="color:oklch(0.8 0.02 85);font-weight:600;">' + (totalTime || '—') + '</span></span>' +
+      '<span>✅ 成功率：<span style="color:#28c840;font-weight:600;">' + okCount + '/' + totalCount + ' 阶段完成</span></span>' +
+      '<span>🕐 最后更新：<span style="color:oklch(0.8 0.02 85);">' + new Date().toISOString().slice(0,10) + '</span></span>' +
+      '</div>';
+    
+    // Show terminal
+    terminal.style.display = 'block';
+    
+    // Fetch report preview
+    try {
+      const reportResp = await fetch('https://raw.githubusercontent.com/Neko-2077/lex-team/main/demo-outputs/%E5%90%88%E8%A7%84%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A_%E6%88%BF%E5%B1%8B%E7%A7%9F%E8%B5%81%E5%90%88%E5%90%8C_%E5%AE%9E%E6%97%B6Pipeline%E4%BA%A7%E5%87%BA.md');
+      const reportText = await reportResp.text();
+      if (reportResp.ok && reportText.trim()) {
+        // Extract first meaningful content (skip title lines)
+        const reportLines = reportText.split('\n').filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('**') || l.includes('总体评估') || l.includes('核心问题') || l.includes('协商优先级'));
+        const preview = reportLines.slice(0, 15).join('\n');
+        document.getElementById('report-content').innerHTML = '<pre style="white-space:pre-wrap;font-family:inherit;margin:0;">' + preview.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '...</pre>';
+        reportPreview.style.display = 'block';
+      }
+    } catch(e) {
+      // Report fetch optional
+    }
+    
+    // Hide loading
+    status.innerHTML = '<span style="font-size:24px;">✅</span><span style="font-family:JetBrains Mono,monospace;font-size:13px;color:var(--accent);">数据来源：GitHub Raw API · ' + new Date().toLocaleString('zh-CN') + '</span>';
+    
+  } catch(e) {
+    status.innerHTML = '<span style="font-size:24px;">⚠️</span><span style="font-family:JetBrains Mono,monospace;font-size:13px;color:var(--text-muted);">无法拉取运行日志（可能是网络问题），<a href="https://github.com/Neko-2077/lex-team/blob/main/demo-outputs/PIPELINE_RUN_LOG.md" target="_blank" style="color:var(--accent);">点击查看原始文件 →</a></span>';
+  }
+}
+
+// Run on load
+fetchPipelineData();
 </script>
 
 </body>
